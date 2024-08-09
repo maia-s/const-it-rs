@@ -17,8 +17,13 @@
 //!
 //! The [`ok!`], [`expect_ok!`], [`unwrap_ok!`], [`unwrap_ok_or_return!`], [`expect_some!`], [`unwrap_some!`]
 //! and [`unwrap_some_or_return!`] macros work with `Result`s and `Option`s.
+//!
+//! The [`bytes_cmp`], [`bytes_eq`], [`str_cmp`] and [`str_eq`] functions compare bytes
+//! slices and strings.
 
 #![no_std]
+
+use core::cmp::Ordering;
 
 /// Turn a `Result` into an `Option`.
 #[macro_export]
@@ -183,9 +188,45 @@ macro_rules! unwrap_some_or_return {
 }
 
 mod slice;
+
 #[doc(hidden)]
 pub use slice::SliceTypeCheck;
 pub use slice::{Slice, SliceIndex};
 
 #[cfg(test)]
 mod tests;
+
+/// Compare two byte slices
+pub const fn bytes_cmp(a: &[u8], b: &[u8]) -> Ordering {
+    let len = a.len();
+    if len < b.len() {
+        return Ordering::Less;
+    } else if len > b.len() {
+        return Ordering::Greater;
+    }
+    let mut i = 0;
+    while i < len {
+        if a[i] < b[i] {
+            return Ordering::Less;
+        } else if a[i] > b[i] {
+            return Ordering::Greater;
+        }
+        i += 1
+    }
+    Ordering::Equal
+}
+
+/// Compare two byte slices for equality
+pub const fn bytes_eq(a: &[u8], b: &[u8]) -> bool {
+    matches!(bytes_cmp(a, b), Ordering::Equal)
+}
+
+/// Compare two strings lexicographically by byte values
+pub const fn str_cmp(a: &str, b: &str) -> Ordering {
+    bytes_cmp(a.as_bytes(), b.as_bytes())
+}
+
+/// Compare two strings for equality
+pub const fn str_eq(a: &str, b: &str) -> bool {
+    bytes_eq(a.as_bytes(), b.as_bytes())
+}

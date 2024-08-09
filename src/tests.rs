@@ -67,3 +67,34 @@ fn split_slice_at() {
     const SPLIT_2: (&str, &str) = split_slice_at!("✨💖", 3);
     assert_eq!(SPLIT_2, ("✨", "💖"));
 }
+
+#[test]
+#[allow(clippy::assertions_on_constants)]
+fn eq() {
+    const EQ: bool = str_eq("hi", "hi");
+    assert!(EQ);
+
+    const NEQ: bool = str_eq("hi", "ho");
+    assert!(!NEQ);
+
+    const NEQ2: bool = str_eq("hi", "hello");
+    assert!(!NEQ2);
+}
+
+#[test]
+fn cmp() {
+    const CMP1: Ordering = str_cmp("hi", "hi");
+    assert_eq!(CMP1, Ordering::Equal);
+
+    const CMP2: Ordering = str_cmp("hi", "ho");
+    assert_eq!(CMP2, Ordering::Less);
+
+    const CMP3: Ordering = str_cmp("ho", "hi");
+    assert_eq!(CMP3, Ordering::Greater);
+
+    const CMP4: Ordering = str_cmp("h", "hi");
+    assert_eq!(CMP4, Ordering::Less);
+
+    const CMP5: Ordering = str_cmp("hi", "h");
+    assert_eq!(CMP5, Ordering::Greater);
+}
