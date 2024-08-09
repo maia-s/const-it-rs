@@ -16,7 +16,7 @@ const STR: (&str, &str) = split_slice_at!("const slice", 5); // ("const", " slic
 The `ok!`, `expect_ok!`, `unwrap_ok!`, `unwrap_ok_or_return!`, `expect_some!`, `unwrap_some!`
 and `unwrap_some_or_return!` macros work with `Result`s and `Option`s.
 
-The `bytes_cmp`, `bytes_eq`, `str_cmp` and `str_eq` functions compare bytes
+The `bytes_cmp`, `bytes_eq`, `str_cmp` and `str_eq` functions compare byte
 slices and strings.
 
 See the documentation at [https://docs.rs/const-it](https://docs.rs/const-it)

@@ -18,7 +18,7 @@
 //! The [`ok!`], [`expect_ok!`], [`unwrap_ok!`], [`unwrap_ok_or_return!`], [`expect_some!`], [`unwrap_some!`]
 //! and [`unwrap_some_or_return!`] macros work with `Result`s and `Option`s.
 //!
-//! The [`bytes_cmp`], [`bytes_eq`], [`str_cmp`] and [`str_eq`] functions compare bytes
+//! The [`bytes_cmp`], [`bytes_eq`], [`str_cmp`] and [`str_eq`] functions compare byte
 //! slices and strings.
 
 #![no_std]
