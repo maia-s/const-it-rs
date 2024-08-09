@@ -1,5 +1,10 @@
+#![allow(clippy::bool_assert_comparison)]
+
 use super::*;
-use core::ops::{Range, RangeInclusive};
+use core::{
+    cmp::Ordering,
+    ops::{Range, RangeInclusive},
+};
 
 macro_rules! cmp_slice {
     ($t:ty, $item:expr, $index:expr) => {{
@@ -53,48 +58,80 @@ fn byte_slice() {
 }
 
 #[test]
-fn split_slice_at() {
-    const SPLIT: (&str, &str) = split_slice_at!("abcde", 3);
+fn slice_split_at() {
+    const SPLIT: (&str, &str) = slice_split_at!("abcde", 3);
     assert_eq!(SPLIT.0, "abc");
     assert_eq!(SPLIT.1, "de");
 
-    const TRY_SPLIT: Option<(&str, &str)> = try_split_slice_at!("abcde", 9);
+    const TRY_SPLIT: Option<(&str, &str)> = slice_try_split_at!("abcde", 9);
     assert_eq!(TRY_SPLIT, None);
 
-    const TRY_SPLIT_2: Option<(&str, &str)> = try_split_slice_at!("✨💖", 2);
+    const TRY_SPLIT_2: Option<(&str, &str)> = slice_try_split_at!("✨💖", 2);
     assert_eq!(TRY_SPLIT_2, None);
 
-    const SPLIT_2: (&str, &str) = split_slice_at!("✨💖", 3);
+    const SPLIT_2: (&str, &str) = slice_split_at!("✨💖", 3);
     assert_eq!(SPLIT_2, ("✨", "💖"));
 }
 
 #[test]
-#[allow(clippy::assertions_on_constants)]
 fn eq() {
-    const EQ: bool = str_eq("hi", "hi");
-    assert!(EQ);
+    const EMPTY: bool = slice_eq!("", "");
+    assert_eq!(EMPTY, true);
 
-    const NEQ: bool = str_eq("hi", "ho");
-    assert!(!NEQ);
+    const EQ: bool = slice_eq!("hi", "hi");
+    assert_eq!(EQ, true);
 
-    const NEQ2: bool = str_eq("hi", "hello");
-    assert!(!NEQ2);
+    const NEQ: bool = slice_eq!("hi", "ho");
+    assert_eq!(NEQ, false);
+
+    const NEQ2: bool = slice_eq!("hi", "hello");
+    assert_eq!(NEQ2, false);
 }
 
 #[test]
 fn cmp() {
-    const CMP1: Ordering = str_cmp("hi", "hi");
+    const CMP1: Ordering = slice_cmp!("hi", "hi");
     assert_eq!(CMP1, Ordering::Equal);
 
-    const CMP2: Ordering = str_cmp("hi", "ho");
+    const CMP2: Ordering = slice_cmp!("hi", "ho");
     assert_eq!(CMP2, Ordering::Less);
 
-    const CMP3: Ordering = str_cmp("ho", "hi");
+    const CMP3: Ordering = slice_cmp!("ho", "hi");
     assert_eq!(CMP3, Ordering::Greater);
 
-    const CMP4: Ordering = str_cmp("h", "hi");
+    const CMP4: Ordering = slice_cmp!("h", "hi");
     assert_eq!(CMP4, Ordering::Less);
 
-    const CMP5: Ordering = str_cmp("hi", "h");
+    const CMP5: Ordering = slice_cmp!("hi", "h");
     assert_eq!(CMP5, Ordering::Greater);
+}
+
+#[test]
+fn prefix() {
+    const STARTS_WITH: bool = slice_starts_with!("abcde", "ab");
+    assert_eq!(STARTS_WITH, true);
+
+    const NOT_STARTS_WITH: bool = slice_starts_with!("abcde", "aba");
+    assert_eq!(NOT_STARTS_WITH, false);
+
+    const STRIPPED: Option<&str> = slice_strip_prefix!("abcde", "abc");
+    assert_eq!(STRIPPED, Some("de"));
+
+    const NOT_STRIPPED: Option<&str> = slice_strip_prefix!("abcde", "ace");
+    assert_eq!(NOT_STRIPPED, None);
+}
+
+#[test]
+fn suffix() {
+    const ENDS_WITH: bool = slice_ends_with!("abcde", "de");
+    assert_eq!(ENDS_WITH, true);
+
+    const NOT_ENDS_WITH: bool = slice_ends_with!("abcde", "ee");
+    assert_eq!(NOT_ENDS_WITH, false);
+
+    const STRIPPED: Option<&str> = slice_strip_suffix!("abcde", "cde");
+    assert_eq!(STRIPPED, Some("ab"));
+
+    const NOT_STRIPPED: Option<&str> = slice_strip_suffix!("abcde", "cdf");
+    assert_eq!(NOT_STRIPPED, None);
 }

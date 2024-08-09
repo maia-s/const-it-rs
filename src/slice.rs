@@ -1,4 +1,5 @@
 use core::{
+    cmp::Ordering,
     ops::{Range, RangeFrom, RangeFull, RangeInclusive, RangeTo, RangeToInclusive},
     str,
 };
@@ -58,12 +59,6 @@ pub struct SliceTypeCheck<'a, S: ?Sized, Index: SliceIndex<S>>(pub &'a S, pub In
 ///
 /// You can use the [`slice!`], [`try_slice!`], [`split_slice_at!`] and [`try_split_slice_at!`]
 /// convenience macros instead of using this directly.
-///
-/// ```rust
-/// # use { const_it::Slice, core::ops::Range };
-/// const STR: &str = Slice("const slice", ..5).index(); // "const"
-/// const BYTES: &[u8] = Slice(b"01234", 1..=3).index(); // b"123"
-/// ```
 pub struct Slice<'a, S: ?Sized, Index>(pub &'a S, pub Index);
 
 const fn slice<T>(s: &[T], start: usize, end: usize) -> Result<&[T], &'static str> {
@@ -274,3 +269,88 @@ impl_slice! {
         str_slice_inclusive(self.0, 0, self.1.end)
     }
 }
+
+pub struct SliceRef<'a, T: ?Sized>(pub &'a T);
+
+impl<'a, T: ?Sized> Clone for SliceRef<'a, T> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<'a, T: ?Sized> Copy for SliceRef<'a, T> {}
+
+impl<'a> SliceRef<'a, str> {
+    pub const fn is_empty(self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub const fn len(self) -> usize {
+        self.0.len()
+    }
+
+    pub const fn cmp(self, other: SliceRef<str>) -> Ordering {
+        SliceRef(self.0.as_bytes()).cmp(SliceRef(other.0.as_bytes()))
+    }
+
+    pub const fn partial_cmp(self, other: SliceRef<str>) -> Option<Ordering> {
+        SliceRef(self.0.as_bytes()).partial_cmp(SliceRef(other.0.as_bytes()))
+    }
+}
+
+macro_rules! impl_slice_cmp {
+    ($($t:ty),* $(,)?) => { $(
+        impl<'a> SliceRef<'a, [$t]> {
+            pub const fn is_empty(self) -> bool {
+                self.0.is_empty()
+            }
+
+            pub const fn len(self) -> usize {
+                self.0.len()
+            }
+
+            pub const fn cmp(self, other: SliceRef<[$t]>) -> Ordering {
+                let len = self.0.len();
+                if len < other.0.len() {
+                    return Ordering::Less;
+                } else if len > other.0.len() {
+                    return Ordering::Greater;
+                }
+                let mut i = 0;
+                while i < len {
+                    if self.0[i] < other.0[i] {
+                        return Ordering::Less;
+                    } else if self.0[i] > other.0[i] {
+                        return Ordering::Greater;
+                    }
+                    i += 1
+                }
+                Ordering::Equal
+            }
+
+            pub const fn partial_cmp(self, other: SliceRef<[$t]>) -> Option<Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+
+        impl<'a, const N: usize> SliceRef<'a, [$t; N]> {
+            pub const fn is_empty(self) -> bool {
+                N != 0
+            }
+
+            pub const fn len(self) -> usize {
+                N
+            }
+
+            pub const fn cmp<const M: usize>(self, other: SliceRef<[$t; M]>) -> Ordering {
+                SliceRef::<[$t]>(self.0).cmp(SliceRef::<[$t]>(other.0))
+            }
+
+            pub const fn partial_cmp<const M: usize>(self, other: SliceRef<[$t; M]>) -> Option<Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+    )* };
+}
+
+impl_slice_cmp!(i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, char, bool);
